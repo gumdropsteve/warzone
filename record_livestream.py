@@ -301,6 +301,7 @@ class Numbers():
         self.last_tr_pred = None
         self.streamer = None
         self.game_mode = None
+        self.team_size = None
         
         self.n_kills_skull_detected = False
         self.top_left = None
@@ -653,7 +654,8 @@ class Numbers():
                         # print(f'n_plyrs: {pr_pred}')
                         
                         this_run = [tr_pred, pr_pred, k_pred, tr_out, pr_out, k_out, record_time, f'{self.output_dir}og_screenshots/{loop}.jpg', self.top_left, 
-                                    self.game_number, self.starting_game, self.in_lobby, self.is_loading_screen, self.leave_game_menu, self.streamer, self.spectating]
+                                    self.game_number, self.starting_game, self.in_lobby, self.is_loading_screen, self.leave_game_menu, self.streamer, self.spectating, 
+                                    self.game_mode, self.team_size]
                         temp_top_right_numbers_stash.append(this_run)   
                     
                     except Exception as e:
@@ -662,7 +664,8 @@ class Numbers():
             else:
                 # this is not an image with anything we want to pull at this time
                 this_run = [None, None, None, None, None, None, record_time, f'{self.output_dir}og_screenshots/{loop}.jpg', self.top_left, 
-                            self.game_number, self.starting_game, self.in_lobby, self.is_loading_screen, self.leave_game_menu, self.streamer, self.spectating]
+                            self.game_number, self.starting_game, self.in_lobby, self.is_loading_screen, self.leave_game_menu, self.streamer, self.spectating,
+                            self.game_mode, self.team_size]
                 temp_top_right_numbers_stash.append(this_run)
             
             if delays:
