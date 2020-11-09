@@ -300,6 +300,7 @@ class Numbers():
         self.last_pr_pred = None
         self.last_tr_pred = None
         self.streamer = None
+        self.game_mode = None
         
         self.n_kills_skull_detected = False
         self.top_left = None
@@ -365,10 +366,10 @@ class Numbers():
             # check to see if we are in the main Warzone lobby
             if self.in_lobby:
                 if printout:
-                    print(f'self.in_lobby == {self.in_lobby}')
-                    print(f'image file path == {out_route}')
-                # don't want to make longer due to potentially missing loading screen
-                sleep(5)
+                    print(f'self.in_lobby == {self.in_lobby} | {out_route}')
+                if delays:
+                    # don't want to make longer due to potentially missing loading screen
+                    sleep(5)
             # we're not in the main Warzone lobby
             # are we on the loading screen?
             elif self.is_loading_screen:
@@ -880,6 +881,8 @@ class Numbers():
         
         if lobby_icon_test is not None:
             self.in_lobby = True
+            # check to see if we can ID the game mode
+            self.check_for_game_mode(Image.fromarray(image))
         else:
             # last frame was lobby, but Warzone icon now missing
             if self.full_lobby_check:
@@ -900,7 +903,46 @@ class Numbers():
                         self.in_lobby = False
             else:
                 self.in_lobby = False
+                
+        # we are in the lobby
+        if self.in_lobby:
+            temp_crop = Image.fromarray(image).crop((0, 0, int(1280*0.35), int(720*0.15)))  
     
+    def check_for_game_mode(self, image):
+        """
+        pytesseract check for words from bottom left
+
+        inputs
+        ------
+        >> image
+            > (1280, 720) grayscale PIL Image
+        """
+        # crop game mode title from 720p PIL Image
+        image = image.crop((int(1280 * 0.125), int(720 * 0.25), int(1280 * 0.25), int(720 * 0.285)))
+        image = np.array(image)
+        image = cv.resize(image, (int(image.shape[1] * 1.2), int(image.shape[0] * 1.2)))
+        
+        text = tess.image_to_string(image, config='--psm 6 -c tessedit_char_whitelist="BR SOLOSDUOSTRIOSQUADSPLUNDER"')
+
+        if 'SOLOS' in text:
+            self.game_mode, self.team_size = 'solos', 1
+        elif 'DUOS' in text:
+            self.game_mode, self.team_size = 'duos', 2
+        elif 'TRIOS' in text:
+            self.game_mode, self.team_size = 'trios', 3
+        elif 'QUADS' in text:
+            self.game_mode, self.team_size  = 'quads', 4
+        elif 'PLUNDER' in text:
+            self.game_mode, self.team_size = 'plunder', None
+            
+        if self.game_mode is not None:
+            if (self.previous_game_mode is not None) and (self.previous_game_mode != self.game_mode):
+                print(f'new game mode: {self.game_mode} | previous: {self.previous_game_mode}')
+                self.previous_game_mode = self.game_mode
+            else:
+                print(f'game mode detected: {self.game_mode}')
+                self.previous_game_mode = self.game_mode
+        
     @dask.delayed
     def check_for_loading_screen(self, image, needle):
         """
